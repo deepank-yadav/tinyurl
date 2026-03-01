@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +17,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+// Spring's @RequestBody is used via its fully-qualified name below to avoid
+// a duplicate-class-name clash with the Swagger @RequestBody imported above.
 
 import java.net.URI;
 
@@ -55,13 +62,18 @@ public class UrlController {
                     """)
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "Invalid URL or alias already taken",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            examples = @ExampleObject(value = """{"error": "Custom alias 'my-link' is already taken."}""")))
+            @ApiResponse(
+                    responseCode = "400",
+                    description  = "Invalid URL or alias already taken",
+                    content      = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples  = @ExampleObject(value = "{\"error\": \"Custom alias 'my-link' is already taken.\"}")
+                    )
+            )
     })
     @PostMapping("/api/shorten")
     public ResponseEntity<UrlDto.ShortenResponse> shorten(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            @RequestBody(
                     description = "URL to shorten with optional alias and expiry",
                     required    = true,
                     content     = @Content(
@@ -76,7 +88,7 @@ public class UrlController {
                         """)
                     )
             )
-            @Valid @RequestBody UrlDto.ShortenRequest request) {
+            @Valid @org.springframework.web.bind.annotation.RequestBody UrlDto.ShortenRequest request) {
 
         UrlDto.ShortenResponse response = urlService.shorten(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -89,14 +101,27 @@ public class UrlController {
             description = "Resolves the short code and returns an HTTP 302 redirect to the original URL. Click count is incremented on each call."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "302", description = "Redirect to the original URL",
-                    headers = @Header(name = "Location", description = "The original long URL")),
-            @ApiResponse(responseCode = "400", description = "Short code not found",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            examples = @ExampleObject(value = """{"error": "Short URL not found: abc1234"}"""))),
-            @ApiResponse(responseCode = "410", description = "Short URL has expired",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            examples = @ExampleObject(value = """{"error": "This short URL has expired."}""")))
+            @ApiResponse(
+                    responseCode = "302",
+                    description  = "Redirect to the original URL",
+                    headers      = @Header(name = "Location", description = "The original long URL")
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description  = "Short code not found",
+                    content      = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples  = @ExampleObject(value = "{\"error\": \"Short URL not found: abc1234\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "410",
+                    description  = "Short URL has expired",
+                    content      = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples  = @ExampleObject(value = "{\"error\": \"This short URL has expired.\"}")
+                    )
+            )
     })
     @GetMapping("/{shortCode}")
     public ResponseEntity<Void> redirect(
@@ -133,9 +158,14 @@ public class UrlController {
                     """)
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "Short code not found",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            examples = @ExampleObject(value = """{"error": "Short URL not found: abc1234"}""")))
+            @ApiResponse(
+                    responseCode = "400",
+                    description  = "Short code not found",
+                    content      = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples  = @ExampleObject(value = "{\"error\": \"Short URL not found: abc1234\"}")
+                    )
+            )
     })
     @GetMapping("/api/stats/{shortCode}")
     public ResponseEntity<UrlDto.StatsResponse> stats(
